@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
+  teardown do
+    Rails.cache.clear
+  end
+
   test "should get pricing with all parameters" do
     mock_body = {
       'rates' => [
@@ -107,5 +111,21 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
 
     json_response = JSON.parse(@response.body)
     assert_includes json_response["error"], "Invalid room"
+  end
+
+  test "should get pricing through cache" do
+    get api_v1_pricing_url, params: {
+      period: "Summer",
+      hotel: "FloatingPointResort",
+      room: "SingletonRoom"
+    }
+
+    assert_response :success
+    assert_equal "application/json", @response.media_type
+
+    json_response = JSON.parse(@response.body)
+    cached_response = JSON.parse(Rails.cache.fetch("rate").body)["rates"][0]["rate"]
+
+    assert_equal json_response["rate"], cached_response
   end
 end

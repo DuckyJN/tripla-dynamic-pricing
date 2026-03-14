@@ -128,4 +128,26 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal json_response["rate"], cached_response
   end
+
+  test "should return error if no rate is found" do
+    mock_body = {
+      'rates' => [
+        { 'period' => 'Summer', 'hotel' => 'FloatingPointResort', 'room' => 'SingletonRoom' }
+      ]
+    }.to_json
+
+    mock_response = OpenStruct.new(success?: false, body: mock_body)
+
+    RateApiClient.stub(:get_rate, mock_response) do
+      get api_v1_pricing_url, params: {
+        period: "Summer",
+        hotel: "FloatingPointResort",
+        room: "SingletonRoom"
+      }
+
+      json_response = JSON.parse(@response.body)
+      assert_equal "application/json", @response.media_type
+      assert_includes json_response["error"], "Rate not found. Please try again."
+    end
+  end
 end

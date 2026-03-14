@@ -18,3 +18,4 @@ This document is created in order to have an overarching view of all the test ca
 - should reject invalid hotel
 - should reject invalid room
 - should get pricing through cache
+- should return error if no rate is found

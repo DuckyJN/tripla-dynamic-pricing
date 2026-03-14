@@ -10,6 +10,7 @@ module Api::V1
       rate = Rails.cache.fetch("rate", expires_in: 5.minutes) do
         RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
       end
+
       if rate.success?
         parsed_rate = JSON.parse(rate.body)
         @result = parsed_rate['rates'].detect { |r| r['period'] == @period && r['hotel'] == @hotel && r['room'] == @room }&.dig('rate')

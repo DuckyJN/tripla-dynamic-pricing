@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
+  teardown do
+    Rails.cache.clear
+  end
+
   test "should get pricing with all parameters" do
     mock_body = {
       'rates' => [
@@ -107,5 +111,45 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
 
     json_response = JSON.parse(@response.body)
     assert_includes json_response["error"], "Invalid room"
+  end
+
+  test "should get pricing through cache" do
+    rate_parameters = ["Summer", "FloatingPointResort", "SingletonRoom"]
+
+    get api_v1_pricing_url, params: {
+      period: "#{rate_parameters[0]}",
+      hotel: "#{rate_parameters[1]}",
+      room: "#{rate_parameters[2]}"
+    }
+
+    assert_response :success
+    assert_equal "application/json", @response.media_type
+
+    json_response = JSON.parse(@response.body)
+    cached_response = JSON.parse(Rails.cache.fetch("rate_#{rate_parameters[0]}_#{rate_parameters[1]}_#{rate_parameters[2]}").body)["rates"][0]["rate"]
+
+    assert_equal json_response["rate"], cached_response
+  end
+
+  test "should return error if no rate is found" do
+    mock_body = {
+      'rates' => [
+        { 'period' => 'Summer', 'hotel' => 'FloatingPointResort', 'room' => 'SingletonRoom' }
+      ]
+    }.to_json
+
+    mock_response = OpenStruct.new(success?: false, body: mock_body)
+
+    RateApiClient.stub(:get_rate, mock_response) do
+      get api_v1_pricing_url, params: {
+        period: "Summer",
+        hotel: "FloatingPointResort",
+        room: "SingletonRoom"
+      }
+
+      json_response = JSON.parse(@response.body)
+      assert_equal "application/json", @response.media_type
+      assert_includes json_response["error"], "Rate not found. Please try again."
+    end
   end
 end

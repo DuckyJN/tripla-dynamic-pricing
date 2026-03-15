@@ -7,7 +7,7 @@ module Api::V1
     end
 
     def run
-      rate = Rails.cache.fetch("rate", expires_in: 5.minutes) do
+      rate = Rails.cache.fetch("rate_#{@period}_#{@hotel}_#{@room}", expires_in: 5.minutes) do
         RateApiClient.get_rate(period: @period, hotel: @hotel, room: @room)
       end
 

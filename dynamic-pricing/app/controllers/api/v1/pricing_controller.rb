@@ -16,7 +16,7 @@ class Api::V1::PricingController < ApplicationController
       render json: { rate: service.result }
     elsif service.result.nil?
       render json: { error: "Rate not found. Please try again." }, status: :bad_request
-      Rails.cache.delete("rate")
+      Rails.cache.delete("rate_#{period}_#{hotel}_#{room}")
     else
       render json: { error: service.errors.join(', ') }, status: :bad_request
     end

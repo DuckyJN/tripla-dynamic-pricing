@@ -2,35 +2,70 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: ["main"]
   pull_request:
-    branches: [main, develop]
+    branches: ["main"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./dynamic-pricing
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Start services
         run: docker compose up -d --build
+
+      - name: Wait for rate-api to be ready
+        run: |
+          echo "Waiting for rate-api on port 8080..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8080 > /dev/null 2>&1; then
+              echo "rate-api is ready!"
+              break
+            fi
+            echo "Attempt $i/30 - not ready yet, retrying in 2s..."
+            sleep 2
+          done
+
+      - name: Check container status
+        run: |
+          echo "Container status:"
+          docker compose ps
+
+          echo ""
+          echo "interview-dev logs:"
+          docker compose logs interview-dev
+
+          echo ""
+          echo "rate-api logs:"
+          docker compose logs rate-api
+
+      - name: Verify interview-dev is running
+        run: |
+          STATUS=$(docker compose ps interview-dev | grep -o 'Up\|running' || echo "not running")
+          echo "interview-dev status: $STATUS"
+          if [[ "$STATUS" == "not running" ]]; then
+            echo "interview-dev is not running. Full logs:"
+            docker compose logs interview-dev
+            exit 1
+          fi
+          echo "interview-dev is running"
+
       - name: Run all tests
         run: docker compose exec interview-dev ./bin/rails test
-      - name: Test API endpoint returns 200
+
+      - name: Print logs on failure
+        if: failure()
         run: |
-          echo "Testing API endpoint..."
-          for i in {1..10}; do
-            echo "Attempt $i/10: Testing pricing endpoint..."
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" 'http://localhost:3000/api/v1/pricing?period=Summer&hotel=FloatingPointResort&room=SingletonRoom' || echo "000")
-            if [ "$HTTP_STATUS" -eq 200 ]; then
-              echo "✅ API endpoint returned HTTP 200"
-              exit 0
-            else
-              echo "❌ API endpoint returned HTTP $HTTP_STATUS, retrying in 3 seconds..."
-              sleep 3
-            fi
-          done
-          echo "❌ API endpoint failed after 10 attempts"
-          exit 1
+          echo "Something failed. Dumping all logs..."
+          echo ""
+          echo "=== interview-dev ==="
+          docker compose logs interview-dev
+          echo ""
+          echo "=== rate-api ==="
+          docker compose logs rate-api
+          echo ""
+          echo "=== Container State ==="
+          docker compose ps

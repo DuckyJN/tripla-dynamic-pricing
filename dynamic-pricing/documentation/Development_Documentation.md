@@ -23,6 +23,8 @@ However, as I was reading through the codebase, there is no rails database, so I
 
 5. Going through my code again, I thought about my caching implementation and noticed that I cached the whole HTTP Response instead of just the rate. So instead of saving just the response, I rewrote it so that it would parse out all of the information and only save the rate, as the cache key would already have the period/hotel/room info.
 
+6. Started to implement a timeout exception where if the api takes 5 seconds or more to return a response, it retries it 2 more times before raising an exception. However, the test cases still need to be implemented to make sure the timeout exception is working as intended or not.
+
 ## To-Dos
 
 1. Testing for throughput requirements

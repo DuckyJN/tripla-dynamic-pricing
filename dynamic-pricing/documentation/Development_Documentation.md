@@ -31,13 +31,9 @@ However, as I was reading through the codebase, there is no rails database, so I
 
 3. Implement API Timeout exceptions in case of stalls
 
-4. Fix Github workflow
-
 ## Closing Thoughts
 
 After implementing caching for the period/hotel/room rate, it made me think about also implementing a database in order to have a running history of the fetched rates. This would then allow for new features to be implemented, such as, a graph to identify trends in the rates. This would allow for clients/guests to become more informed on their purchases.
 
 One thing that I have been unable to implement was the testing for the throughput requirements. This was something that I was trying to wrap my head around, as to how I should approach writing test cases for it.
 To add on, I am currently working on adding a timeout exception to handle requests that stall for too long. This would allow the user to not sit there waiting for something to happen.
-
-The last thing that I have not been able to get around to was fixing the Github workflow, which is out of scope for the assignment, yet important to show that the tests and application are working as expected, at a glance.

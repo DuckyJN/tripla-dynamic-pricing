@@ -7,8 +7,9 @@ Having a read through the background and the requirements of the take-home assig
 However, as I was reading through the codebase, there is no rails database, so I am torn between two choices.
 
 - One is to create a database that saves the parameters and rate that was returned.
-
+  - Creates a running history of the rates that was fetched.
 - Two is to enable caching so that it only stays within memory for the 5 minutes.
+  - Allows clients to fetch rates, but does not keep a history of it after the 5 minutes are up. Can then possibly have the rate be saved to another database if the client chooses to book a room.
 
 ## Implementations
 
@@ -21,3 +22,13 @@ However, as I was reading through the codebase, there is no rails database, so I
 4. After having another look through the requirements, I forgot to implement caching for the different combinations of period/hotel/room, so the result would only be 1 rate for each combination of rooms. Therefore, I implemented caching for the different combinations. However, it occurred to me that having a database alongside the caching would help having redundancy and provide a history for each of the rates. This could allow for a future feature to graph the rate fluctuations over time in order for users to best anticipate the best rate for their buck.
 
 5. Going through my code again, I thought about my caching implementation and noticed that I cached the whole HTTP Response instead of just the rate. So instead of saving just the response, I rewrote it so that it would parse out all of the information and only save the rate, as the cache key would already have the period/hotel/room info.
+
+## To-Dos
+
+1. Testing for throughput requirements
+
+2. Test standalone API calls
+
+3. Implement API Timeout exceptions in case of stalls
+
+4. Fix Github workflow

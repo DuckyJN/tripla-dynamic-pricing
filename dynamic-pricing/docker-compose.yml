@@ -3,6 +3,12 @@ services:
     image: tripladev/rate-api
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   interview-dev:
     build: .
@@ -13,4 +19,5 @@ services:
     environment:
       - RATE_API_URL=http://rate-api:8080
     depends_on:
-      - rate-api
+      rate-api:
+        condition: service_healthy

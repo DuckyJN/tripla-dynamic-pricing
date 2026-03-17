@@ -16,8 +16,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Start services
         run: docker compose up -d --build
-      - name: Specifically run interview-dev
-        run: docker compose up interview-dev -d
       - name: Run all tests
         run: docker compose exec interview-dev ./bin/rails test
       - name: Test API endpoint returns 200

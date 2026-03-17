@@ -126,7 +126,7 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
     assert_equal "application/json", @response.media_type
 
     json_response = JSON.parse(@response.body)
-    cached_response = JSON.parse(Rails.cache.fetch("rate_#{rate_parameters[0]}_#{rate_parameters[1]}_#{rate_parameters[2]}").body)["rates"][0]["rate"]
+    cached_response = Rails.cache.fetch("rate_#{rate_parameters[0]}_#{rate_parameters[1]}_#{rate_parameters[2]}")
 
     assert_equal json_response["rate"], cached_response
   end

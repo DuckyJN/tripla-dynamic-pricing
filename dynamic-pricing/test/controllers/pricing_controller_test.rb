@@ -114,21 +114,28 @@ class Api::V1::PricingControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get pricing through cache" do
-    rate_parameters = ["Summer", "FloatingPointResort", "SingletonRoom"]
+    mock_body = {
+      'rates' => [
+        { 'period' => 'Summer', 'hotel' => 'FloatingPointResort', 'room' => 'SingletonRoom', 'rate' => '15000' }
+      ]
+    }.to_json
 
-    get api_v1_pricing_url, params: {
-      period: "#{rate_parameters[0]}",
-      hotel: "#{rate_parameters[1]}",
-      room: "#{rate_parameters[2]}"
-    }
+    mock_response = OpenStruct.new(success?: true, body: mock_body)
 
-    assert_response :success
-    assert_equal "application/json", @response.media_type
+    RateApiClient.stub(:get_rate, mock_response) do
+      get api_v1_pricing_url, params: {
+        period: "Summer",
+        hotel: "FloatingPointResort",
+        room: "SingletonRoom"
+      }
 
-    json_response = JSON.parse(@response.body)
-    cached_response = Rails.cache.fetch("rate_#{rate_parameters[0]}_#{rate_parameters[1]}_#{rate_parameters[2]}")
+      assert_response :success
+      assert_equal "application/json", @response.media_type
 
-    assert_equal json_response["rate"], cached_response
+      json_response = JSON.parse(@response.body)
+      cached_response = Rails.cache.fetch("rate_Summer_FloatingPointResort_SingletonRoom")
+      assert_equal json_response["rate"], cached_response
+    end
   end
 
   test "should return error if no rate is found" do
